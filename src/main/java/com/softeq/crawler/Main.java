@@ -14,13 +14,8 @@ public class Main {
     private static int countPages = 1000;
 
     public static void main(String[] args) {
-//        HtmlWebCrawler crawler = new HtmlWebCrawler(PATTERNS);
-//        crawler.setLinkDeap(0);
-//        System.out.println(crawler.start(ROOT_URI));
-        try {
-            new JsoupHandler().parse(ROOT_URI);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        HtmlWebCrawler crawler = new HtmlWebCrawler(PATTERNS);
+        crawler.setLinkDeap(1);
+        System.out.println(crawler.start(ROOT_URI));
     }
 }

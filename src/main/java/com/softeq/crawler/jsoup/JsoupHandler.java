@@ -4,7 +4,9 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
 import java.io.IOException;
+import java.net.URL;
 import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class JsoupHandler {
@@ -26,7 +28,7 @@ public class JsoupHandler {
         }
     }
 
-    public JsoupHandler() { }
+
 
     public Set<String> getLinks() {
         return new HashSet<>(links);
@@ -40,8 +42,14 @@ public class JsoupHandler {
 
 
 
-    public void parse(String url) throws IOException {
-        Document doc = Jsoup.connect(url).get();
+    public void parse(String urlStr) throws IOException {
+        for (Map.Entry<String, Integer> someCase : this.result.entrySet()) {
+            someCase.setValue(0);
+        }
+        this.links.clear();
+
+        Document doc = Jsoup.connect(urlStr).get();
+        URL url = new URL(urlStr);
 
 //        List<Node> allNodes = doc.childNodes();
 //        for (Node item : allNodes) {
@@ -67,9 +75,27 @@ public class JsoupHandler {
 //        }
 
         String html = doc.getElementsByTag("html").text();
-        Element titleEl = doc.getElementsByTag("title").first();
-        Element bodyEl = doc.select("body").first();
+        Integer temp;
+        String key;
+        for (Pattern pt : rules) {
+            Matcher matcher = pt.matcher(html);
+            key = pt.pattern();
+            while (matcher.find()) {
+                temp = this.result.get(key);
+                this.result.put(key, ++temp);
+            }
+        }
 
         Elements links = doc.getElementsByTag("a");
+        String urlRes;
+        for (Element link : links) {
+            if ((urlRes = link.attr("href")) == null || urlRes.startsWith("#")) {
+                continue;
+            }
+            String valUrlRes = urlRes.startsWith("http") ?
+                    urlRes :
+                    String.format("%s://%s%s", url.getProtocol(), url.getHost(), urlRes);
+            this.links.add(valUrlRes);
+        }
     }
 }

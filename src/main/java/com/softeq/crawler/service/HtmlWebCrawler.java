@@ -1,7 +1,6 @@
 package com.softeq.crawler.service;
 
 import com.softeq.crawler.jsoup.JsoupHandler;
-
 import java.io.*;
 import java.util.*;
 import java.util.regex.Pattern;
@@ -15,6 +14,7 @@ public class HtmlWebCrawler {
     private static final int DEFAULT_MAX_PROCESSING_PAGES = 1000;
     private static final String DEFAULT_REPORT_PATH = "report.txt";
 
+    private String root;
     private JsoupHandler handler;
     private Deque<String> processLinks = new LinkedList<>();
     private int linkDeap;
@@ -80,65 +80,63 @@ public class HtmlWebCrawler {
 
 
     public String start(String URL) {
-        processLinks.add(URL);
-
+        this.root = URL;
+        processLinks.add(this.root);
         String lastLinkInCurrentBlock = URL;
-        File report = new File(reportPath);
-        if (report.exists()) {
-            report.delete();
+        File file = new File(reportPath);
+        if (file.exists()) {
+            file.delete();
         }
 
         while (!processLinks.isEmpty() && linkDeap >= 0 && processingPages >= 0) {
-//            String currentLink = processLinks.poll();
-//            try {
-//                parser.parse(currentLink);
-//            } catch (IOException | SAXException e) {
-//                e.printStackTrace();
-//            }
-//
-//            Map<String, Integer> result = ((CustomParserHandler) handler).getResult();
-//            if (!report.exists()) {
-//                String titleCSV = createTitleCSV(result);
-//                writeCsvLine(titleCSV, report);
-//            }
-//            String lineCSV = convertToCSV(result, currentLink);
-//            writeCsvLine(lineCSV, report);
-//
-//            Set<String> links = ((CustomParserHandler) handler).getLinks();
-//            processLinks.addAll(links);
-//
-//            if (currentLink.equals(lastLinkInCurrentBlock)) {
-//                linkDeap--;
-//                lastLinkInCurrentBlock = processLinks.peekLast();
-//            }
-//
-//            processingPages--;
-//            ((CustomParserHandler) handler).clear();
+            String currentUrl = processLinks.poll();
+            try {
+                handler.parse(currentUrl);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+            writeCsvLine(file, currentUrl);
+
+            Set<String> links = handler.getLinks();
+            processLinks.addAll(links);
+
+            if (currentUrl.equals(lastLinkInCurrentBlock)) {
+                linkDeap--;
+                lastLinkInCurrentBlock = processLinks.peekLast();
+            }
+
+            processingPages--;
         }
 
-        return report.getAbsolutePath();
+        return file.getAbsolutePath();
     }
 
 
 
-    private void writeCsvLine(String strCSV, File file) {
-        try (PrintWriter writer = new PrintWriter(new FileOutputStream(file, true))) {
-            writer.println(strCSV);
+    private void writeCsvLine(File file, String currentUrl) {
+        try (PrintWriter wr = new PrintWriter(new FileOutputStream(file, true))) {
+            if (this.root.equals(currentUrl)) {
+                String t = createTitleCSV();
+                wr.println(t);
+            }
+            String l = createLineCSV(currentUrl);
+            wr.println(l);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
 
-    private String convertToCSV(Map<String, Integer> result, String URL) {
-        String str = result.values()
+    private String createLineCSV(String URL) {
+        String str = handler.getResult().values()
                 .stream()
                 .map((item) -> "," + item)
                 .collect(Collectors.joining());
         return URL + str;
     }
 
-    private String createTitleCSV(Map<String, Integer> result) {
-        String title = result.keySet()
+    private String createTitleCSV() {
+        String title = handler.getResult().keySet()
                 .stream()
                 .collect(Collectors.joining(",", ",", ""));
         return "URL" + title;
