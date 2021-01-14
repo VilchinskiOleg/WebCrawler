@@ -1,10 +1,8 @@
-package com.softeq.crawler;
+package com.softeq.crawler.service;
 
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
+import com.softeq.crawler.jsoup.JsoupHandler;
+
 import java.io.*;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -17,28 +15,24 @@ public class HtmlWebCrawler {
     private static final int DEFAULT_MAX_PROCESSING_PAGES = 1000;
     private static final String DEFAULT_REPORT_PATH = "report.txt";
 
-    private XMLReader parser = new CustomHTMLReader();
-    private ContentHandler handler;
-
+    private JsoupHandler handler;
     private Deque<String> processLinks = new LinkedList<>();
-
     private int linkDeap;
     private int processingPages;
     private String reportPath;
 
-    public HtmlWebCrawler(CustomParserHandler handler) {
+
+
+    public HtmlWebCrawler(JsoupHandler handler) {
         this.handler = handler;
-        this.linkDeap = DEFAULT_MAX_LINK_DEAP;
-        this.processingPages = DEFAULT_MAX_PROCESSING_PAGES;
-        this.reportPath = DEFAULT_REPORT_PATH;
     }
 
     public HtmlWebCrawler(String ... regexp) {
         if (regexp.length == 1) {
             Pattern pattern = Pattern.compile(regexp[0]);
-            this.handler = new CustomParserHandler(pattern);
+            this.handler = new JsoupHandler(pattern);
         } else {
-            this.handler = new CustomParserHandler(regexp);
+            this.handler = new JsoupHandler(regexp);
         }
         this.linkDeap = DEFAULT_MAX_LINK_DEAP;
         this.processingPages = DEFAULT_MAX_PROCESSING_PAGES;
@@ -48,9 +42,9 @@ public class HtmlWebCrawler {
     public HtmlWebCrawler(int linkDeap, int processingPages, String reportPath, String ... regexp) {
         if (regexp.length == 1) {
             Pattern pattern = Pattern.compile(regexp[0]);
-            this.handler = new CustomParserHandler(pattern);
+            this.handler = new JsoupHandler(pattern);
         } else {
-            this.handler = new CustomParserHandler(regexp);
+            this.handler = new JsoupHandler(regexp);
         }
         this.linkDeap = linkDeap;
         this.processingPages = processingPages;
@@ -83,16 +77,9 @@ public class HtmlWebCrawler {
         this.reportPath = reportPath;
     }
 
-    public void setHandler(CustomParserHandler handler) {
-        if (handler != null){
-            this.handler = handler;
-        }
-    }
-
 
 
     public String start(String URL) {
-        parser.setContentHandler(handler);
         processLinks.add(URL);
 
         String lastLinkInCurrentBlock = URL;
@@ -102,31 +89,31 @@ public class HtmlWebCrawler {
         }
 
         while (!processLinks.isEmpty() && linkDeap >= 0 && processingPages >= 0) {
-            String currentLink = processLinks.poll();
-            try {
-                parser.parse(currentLink);
-            } catch (IOException | SAXException e) {
-                e.printStackTrace();
-            }
-
-            Map<String, Integer> result = ((CustomParserHandler) handler).getResult();
-            if (!report.exists()) {
-                String titleCSV = createTitleCSV(result);
-                writeCsvLine(titleCSV, report);
-            }
-            String lineCSV = convertToCSV(result, currentLink);
-            writeCsvLine(lineCSV, report);
-
-            Set<String> links = ((CustomParserHandler) handler).getLinks();
-            processLinks.addAll(links);
-
-            if (currentLink.equals(lastLinkInCurrentBlock)) {
-                linkDeap--;
-                lastLinkInCurrentBlock = processLinks.peekLast();
-            }
-
-            processingPages--;
-            ((CustomParserHandler) handler).clear();
+//            String currentLink = processLinks.poll();
+//            try {
+//                parser.parse(currentLink);
+//            } catch (IOException | SAXException e) {
+//                e.printStackTrace();
+//            }
+//
+//            Map<String, Integer> result = ((CustomParserHandler) handler).getResult();
+//            if (!report.exists()) {
+//                String titleCSV = createTitleCSV(result);
+//                writeCsvLine(titleCSV, report);
+//            }
+//            String lineCSV = convertToCSV(result, currentLink);
+//            writeCsvLine(lineCSV, report);
+//
+//            Set<String> links = ((CustomParserHandler) handler).getLinks();
+//            processLinks.addAll(links);
+//
+//            if (currentLink.equals(lastLinkInCurrentBlock)) {
+//                linkDeap--;
+//                lastLinkInCurrentBlock = processLinks.peekLast();
+//            }
+//
+//            processingPages--;
+//            ((CustomParserHandler) handler).clear();
         }
 
         return report.getAbsolutePath();
@@ -141,7 +128,7 @@ public class HtmlWebCrawler {
             e.printStackTrace();
         }
     }
-    BufferedOutputStream
+
     private String convertToCSV(Map<String, Integer> result, String URL) {
         String str = result.values()
                 .stream()
