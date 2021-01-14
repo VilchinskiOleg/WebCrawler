@@ -1,10 +1,11 @@
-package com.softeq.crawler;
+package com.softeq.crawler.service;
 
+import com.softeq.crawler.parser.CustomHTMLReader;
+import com.softeq.crawler.parser.CustomParserHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 import java.io.*;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -141,7 +142,7 @@ public class HtmlWebCrawler {
             e.printStackTrace();
         }
     }
-    BufferedOutputStream
+
     private String convertToCSV(Map<String, Integer> result, String URL) {
         String str = result.values()
                 .stream()

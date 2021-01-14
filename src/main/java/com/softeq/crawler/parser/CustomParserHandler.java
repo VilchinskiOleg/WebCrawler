@@ -1,4 +1,4 @@
-package com.softeq.crawler;
+package com.softeq.crawler.parser;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;

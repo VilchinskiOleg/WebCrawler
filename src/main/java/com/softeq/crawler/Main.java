@@ -1,5 +1,7 @@
 package com.softeq.crawler;
 
+import com.softeq.crawler.service.HtmlWebCrawler;
+
 public class Main {
 
     // Input Data:

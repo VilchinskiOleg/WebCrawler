@@ -1,4 +1,4 @@
-package com.softeq.crawler;
+package com.softeq.crawler.parser;
 
 import org.xml.sax.*;
 import org.xml.sax.helpers.AttributesImpl;
@@ -126,7 +126,7 @@ public class CustomHTMLReader implements XMLReader {
         List<Character> tagData = new LinkedList<>();
         List<Character> contentData = new LinkedList<>();
 
-        try (BufferedReader inBf = new BufferedReader(reader)) {
+        try (BufferedReader inBf = new BufferedReader(reader, 4)) {
             while ((currentSymbol = inBf.read()) != -1) {
                 switch (currentSymbol) {
                     case '<':
