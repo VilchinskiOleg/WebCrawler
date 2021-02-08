@@ -1,10 +1,7 @@
-package com.softeq.crawler;
+package com.softeq.crawler.service;
 
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
-import org.xml.sax.XMLReader;
+import com.softeq.crawler.jsoup.JsoupHandler;
 import java.io.*;
-import java.nio.file.Paths;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -17,28 +14,25 @@ public class HtmlWebCrawler {
     private static final int DEFAULT_MAX_PROCESSING_PAGES = 1000;
     private static final String DEFAULT_REPORT_PATH = "report.txt";
 
-    private XMLReader parser = new CustomHTMLReader();
-    private ContentHandler handler;
-
+    private String root;
+    private JsoupHandler handler;
     private Deque<String> processLinks = new LinkedList<>();
-
     private int linkDeap;
     private int processingPages;
     private String reportPath;
 
-    public HtmlWebCrawler(CustomParserHandler handler) {
+
+
+    public HtmlWebCrawler(JsoupHandler handler) {
         this.handler = handler;
-        this.linkDeap = DEFAULT_MAX_LINK_DEAP;
-        this.processingPages = DEFAULT_MAX_PROCESSING_PAGES;
-        this.reportPath = DEFAULT_REPORT_PATH;
     }
 
     public HtmlWebCrawler(String ... regexp) {
         if (regexp.length == 1) {
             Pattern pattern = Pattern.compile(regexp[0]);
-            this.handler = new CustomParserHandler(pattern);
+            this.handler = new JsoupHandler(pattern);
         } else {
-            this.handler = new CustomParserHandler(regexp);
+            this.handler = new JsoupHandler(regexp);
         }
         this.linkDeap = DEFAULT_MAX_LINK_DEAP;
         this.processingPages = DEFAULT_MAX_PROCESSING_PAGES;
@@ -48,9 +42,9 @@ public class HtmlWebCrawler {
     public HtmlWebCrawler(int linkDeap, int processingPages, String reportPath, String ... regexp) {
         if (regexp.length == 1) {
             Pattern pattern = Pattern.compile(regexp[0]);
-            this.handler = new CustomParserHandler(pattern);
+            this.handler = new JsoupHandler(pattern);
         } else {
-            this.handler = new CustomParserHandler(regexp);
+            this.handler = new JsoupHandler(regexp);
         }
         this.linkDeap = linkDeap;
         this.processingPages = processingPages;
@@ -62,96 +56,78 @@ public class HtmlWebCrawler {
     public int getLinkDeap() {
         return linkDeap;
     }
-
     public void setLinkDeap(int linkDeap) {
         this.linkDeap = linkDeap;
     }
-
     public int getProcessingPages() {
         return processingPages;
     }
-
     public void setProcessingPages(int processingPages) {
         this.processingPages = processingPages;
     }
-
     public String getReportPath() {
         return reportPath;
     }
-
     public void setReportPath(String reportPath) {
         this.reportPath = reportPath;
-    }
-
-    public void setHandler(CustomParserHandler handler) {
-        if (handler != null){
-            this.handler = handler;
-        }
     }
 
 
 
     public String start(String URL) {
-        parser.setContentHandler(handler);
-        processLinks.add(URL);
-
+        this.root = URL;
+        processLinks.add(this.root);
         String lastLinkInCurrentBlock = URL;
-        File report = new File(reportPath);
-        if (report.exists()) {
-            report.delete();
+        File file = new File(reportPath);
+        if (file.exists()) {
+            file.delete();
         }
 
         while (!processLinks.isEmpty() && linkDeap >= 0 && processingPages >= 0) {
-            String currentLink = processLinks.poll();
+            String currentUrl = processLinks.poll();
             try {
-                parser.parse(currentLink);
-            } catch (IOException | SAXException e) {
+                handler.parse(currentUrl);
+            } catch (IOException e) {
                 e.printStackTrace();
             }
-
-            Map<String, Integer> result = ((CustomParserHandler) handler).getResult();
-            if (!report.exists()) {
-                String titleCSV = createTitleCSV(result);
-                writeCsvLine(titleCSV, report);
-            }
-            String lineCSV = convertToCSV(result, currentLink);
-            writeCsvLine(lineCSV, report);
-
-            Set<String> links = ((CustomParserHandler) handler).getLinks();
+            writeCsvLine(file, currentUrl);
+            Set<String> links = handler.getLinks();
             processLinks.addAll(links);
-
-            if (currentLink.equals(lastLinkInCurrentBlock)) {
+            if (currentUrl.equals(lastLinkInCurrentBlock)) {
                 linkDeap--;
                 lastLinkInCurrentBlock = processLinks.peekLast();
             }
-
             processingPages--;
-            ((CustomParserHandler) handler).clear();
         }
 
-        return report.getAbsolutePath();
+        return file.getAbsolutePath();
     }
 
 
 
-    private void writeCsvLine(String strCSV, File file) {
-        try (PrintWriter writer = new PrintWriter(new FileOutputStream(file, true))) {
-            writer.println(strCSV);
+    private void writeCsvLine(File file, String currentUrl) {
+        try (PrintWriter wr = new PrintWriter(new FileOutputStream(file, true))) {
+            if (this.root.equals(currentUrl)) {
+                String t = createTitleCSV();
+                wr.println(t);
+            }
+            String l = createLineCSV(currentUrl);
+            wr.println(l);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
     }
-    BufferedOutputStream
-    private String convertToCSV(Map<String, Integer> result, String URL) {
-        String str = result.values()
+
+    private String createLineCSV(String URL) {
+        String str = handler.getResult().values()
                 .stream()
                 .map((item) -> "," + item)
                 .collect(Collectors.joining());
         return URL + str;
     }
 
-    private String createTitleCSV(Map<String, Integer> result) {
-        String title = result.keySet()
+    private String createTitleCSV() {
+        String title = handler.getResult().keySet()
                 .stream()
                 .collect(Collectors.joining(",", ",", ""));
         return "URL" + title;

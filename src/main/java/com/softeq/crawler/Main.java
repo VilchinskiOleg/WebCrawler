@@ -1,5 +1,7 @@
 package com.softeq.crawler;
 
+import com.softeq.crawler.service.HtmlWebCrawler;
+
 public class Main {
 
     // Input Data:
@@ -10,7 +12,7 @@ public class Main {
 
     public static void main(String[] args) {
         HtmlWebCrawler crawler = new HtmlWebCrawler(PATTERNS);
-        crawler.setLinkDeap(0);
+        crawler.setLinkDeap(1);
         System.out.println(crawler.start(ROOT_URI));
     }
 }
