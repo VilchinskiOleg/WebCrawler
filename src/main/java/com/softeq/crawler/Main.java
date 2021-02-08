@@ -1,9 +1,6 @@
 package com.softeq.crawler;
 
-import com.softeq.crawler.jsoup.JsoupHandler;
 import com.softeq.crawler.service.HtmlWebCrawler;
-
-import java.io.IOException;
 
 public class Main {
 

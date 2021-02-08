@@ -1,5 +1,4 @@
 package com.softeq.crawler.jsoup;
-
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.*;
 import org.jsoup.select.Elements;
@@ -48,31 +47,9 @@ public class JsoupHandler {
         }
         this.links.clear();
 
+        // Учесть что запрос может вернуть код 400, 402, 404 (!!!):
         Document doc = Jsoup.connect(urlStr).get();
         URL url = new URL(urlStr);
-
-//        List<Node> allNodes = doc.childNodes();
-//        for (Node item : allNodes) {
-//            List<Node> nodes = item.childNodes();
-//        }
-
-//        Element titleEl = doc.getElementsByTag("title").first();
-//        String name = titleEl.nodeName();
-//        String content = titleEl.data(); - some meta information
-//        String content = titleEl.text(); - text-content
-//        Attributes attributes = titleEl.attributes();
-//        for (Attribute attr : attributes) {
-//            System.out.printf("key : %s / value : %s", attr.getKey(), attr.getValue());
-//        }
-
-//        Element bodyEl = doc.select("body").first();
-//        String text = bodyEl.text();
-//        for (Element element : bodyEl.children()) {
-//            String name = element.nodeName();
-//            String content = element.text();
-//            String aClass = element.attr("class");
-//            System.out.println();
-//        }
 
         String html = doc.getElementsByTag("html").text();
         Integer temp;

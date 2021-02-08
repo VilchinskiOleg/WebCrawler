@@ -56,23 +56,18 @@ public class HtmlWebCrawler {
     public int getLinkDeap() {
         return linkDeap;
     }
-
     public void setLinkDeap(int linkDeap) {
         this.linkDeap = linkDeap;
     }
-
     public int getProcessingPages() {
         return processingPages;
     }
-
     public void setProcessingPages(int processingPages) {
         this.processingPages = processingPages;
     }
-
     public String getReportPath() {
         return reportPath;
     }
-
     public void setReportPath(String reportPath) {
         this.reportPath = reportPath;
     }
@@ -95,17 +90,13 @@ public class HtmlWebCrawler {
             } catch (IOException e) {
                 e.printStackTrace();
             }
-
             writeCsvLine(file, currentUrl);
-
             Set<String> links = handler.getLinks();
             processLinks.addAll(links);
-
             if (currentUrl.equals(lastLinkInCurrentBlock)) {
                 linkDeap--;
                 lastLinkInCurrentBlock = processLinks.peekLast();
             }
-
             processingPages--;
         }
 
